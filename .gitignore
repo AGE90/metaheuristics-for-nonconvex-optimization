@@ -2,3 +2,9 @@
 .venv
 .vscode
 __pycache__
+.ruff_cache
+.pytest_cache
+
+# reference papers are typically copyrighted PDFs; keep them local-only
+reference/papers/*
+!reference/papers/.gitkeep
