@@ -9,3 +9,6 @@ graphify-out/
 # reference papers are typically copyrighted PDFs; keep them local-only
 reference/papers/*
 !reference/papers/.gitkeep
+
+# files
+CLAUDE.md
