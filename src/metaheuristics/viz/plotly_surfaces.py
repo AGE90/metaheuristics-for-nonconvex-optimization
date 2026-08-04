@@ -32,7 +32,9 @@ def plot_surface(
     title: str | None = None,
 ) -> go.Figure:
     """Interactive 3D surface of a benchmark landscape (rotate/zoom in the notebook)."""
-    bounds = bounds if bounds is not None else func.bounds
+    bounds = bounds if bounds is not None else getattr(func, "bounds", None)
+    if bounds is None:
+        raise ValueError("bounds must be provided when func has no 'bounds' attribute")
     X1, X2, Y = evaluate_grid(func, bounds, resolution)
 
     fig = go.Figure(
@@ -70,15 +72,36 @@ def plot_contour_with_trajectory(
     ``max_frames`` points, since each frame's trail is cumulative (O(n^2)
     data in the number of frames) and a run can have thousands of iterations.
     """
-    bounds = bounds if bounds is not None else func.bounds
+    bounds = bounds if bounds is not None else getattr(func, "bounds", None)
+    if bounds is None:
+        raise ValueError("bounds must be provided when func has no 'bounds' attribute")
     X1, X2, Y = evaluate_grid(func, bounds, resolution)
     full_path = np.array(result.position_history)
-    frame_indices = np.unique(np.linspace(0, len(full_path) - 1, min(max_frames, len(full_path))).astype(int))
+    frame_indices = np.unique(
+        np.linspace(0, len(full_path) - 1, min(max_frames, len(full_path))).astype(int)
+    )
     path = full_path[frame_indices]
+
+    trajectory_trace = go.Scatter(
+        x=path[:1, 0],
+        y=path[:1, 1],
+        mode="lines+markers",
+        marker={"color": "red", "size": 6},
+        line={"color": "red"},
+    )
 
     frames = [
         go.Frame(
-            data=[go.Scatter(x=path[: i + 1, 0], y=path[: i + 1, 1], mode="lines+markers", marker={"color": "red", "size": 6}, line={"color": "red"})],
+            data=[
+                go.Scatter(
+                    x=path[: i + 1, 0],
+                    y=path[: i + 1, 1],
+                    mode="lines+markers",
+                    marker={"color": "red", "size": 6},
+                    line={"color": "red"},
+                )
+            ],
+            traces=[1],
             name=str(i),
         )
         for i in range(len(path))
@@ -87,7 +110,7 @@ def plot_contour_with_trajectory(
     fig = go.Figure(
         data=[
             go.Contour(x=X1[0], y=X2[:, 0], z=Y, colorscale="Viridis", showscale=False),
-            frames[0].data[0],
+            trajectory_trace,
         ],
         frames=frames,
     )
@@ -101,15 +124,45 @@ def plot_contour_with_trajectory(
                 "type": "buttons",
                 "showactive": False,
                 "buttons": [
-                    {"label": "Play", "method": "animate", "args": [None, {"frame": {"duration": 80, "redraw": True}, "fromcurrent": True}]},
-                    {"label": "Pause", "method": "animate", "args": [[None], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate"}]},
+                    {
+                        "label": "Play",
+                        "method": "animate",
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 80, "redraw": True},
+                                "fromcurrent": True,
+                            },
+                        ],
+                    },
+                    {
+                        "label": "Pause",
+                        "method": "animate",
+                        "args": [
+                            [None],
+                            {
+                                "frame": {"duration": 0, "redraw": False},
+                                "mode": "immediate",
+                            },
+                        ],
+                    },
                 ],
             }
         ],
         sliders=[
             {
                 "steps": [
-                    {"method": "animate", "args": [[str(i)], {"mode": "immediate", "frame": {"duration": 0, "redraw": True}}], "label": str(i)}
+                    {
+                        "method": "animate",
+                        "args": [
+                            [str(i)],
+                            {
+                                "mode": "immediate",
+                                "frame": {"duration": 0, "redraw": True},
+                            },
+                        ],
+                        "label": str(i),
+                    }
                     for i in range(len(path))
                 ]
             }

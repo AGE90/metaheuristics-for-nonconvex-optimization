@@ -6,13 +6,33 @@ from ``np.meshgrid``, for vectorized surface plotting), and returns the
 scalar objective value(s). All functions are posed as **minimization**
 problems, matching the optimizer modules in ``metaheuristics.algorithms``.
 
-Each function carries two attributes used by tests, docs, and notebooks:
+Each function is wrapped in a :class:`BenchmarkFunction`, a small callable dataclass carrying two
+attributes used by tests, docs, and notebooks:
 
 - ``bounds``: the conventional search domain, as ``((x1_lo, x1_hi), (x2_lo, x2_hi))``.
 - ``global_minimum``: ``(x_star, f_star)``, a known minimizer and its value.
 """
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 import numpy as np
+
+
+@dataclass
+class BenchmarkFunction:
+    """Callable wrapper pairing a landscape function with its bounds and known optimum."""
+
+    func: Callable[[np.ndarray], np.ndarray]
+    bounds: tuple[tuple[float, float], tuple[float, float]]
+    global_minimum: tuple[np.ndarray, float]
+
+    def __call__(self, x):
+        return self.func(x)
+
+    @property
+    def __name__(self) -> str:
+        return self.func.__name__
 
 
 def sphere(x):
@@ -21,8 +41,7 @@ def sphere(x):
     return np.sum(x**2, axis=0)
 
 
-sphere.bounds = ((-5.12, 5.12), (-5.12, 5.12))
-sphere.global_minimum = (np.zeros(2), 0.0)
+sphere = BenchmarkFunction(sphere, ((-5.12, 5.12), (-5.12, 5.12)), (np.zeros(2), 0.0))
 
 
 def rastrigin(x):
@@ -34,8 +53,7 @@ def rastrigin(x):
     return 10 * n + A + B
 
 
-rastrigin.bounds = ((-5.12, 5.12), (-5.12, 5.12))
-rastrigin.global_minimum = (np.zeros(2), 0.0)
+rastrigin = BenchmarkFunction(rastrigin, ((-5.12, 5.12), (-5.12, 5.12)), (np.zeros(2), 0.0))
 
 
 def ackley(x):
@@ -46,8 +64,7 @@ def ackley(x):
     return -20.0 * A - B + np.exp(1) + 20
 
 
-ackley.bounds = ((-5.0, 5.0), (-5.0, 5.0))
-ackley.global_minimum = (np.zeros(2), 0.0)
+ackley = BenchmarkFunction(ackley, ((-5.0, 5.0), (-5.0, 5.0)), (np.zeros(2), 0.0))
 
 
 def rosenbrock(x):
@@ -57,8 +74,7 @@ def rosenbrock(x):
     return (a - x1) ** 2 + b * (x2 - x1**2) ** 2
 
 
-rosenbrock.bounds = ((-2.0, 2.0), (-1.0, 3.0))
-rosenbrock.global_minimum = (np.array([1.0, 1.0]), 0.0)
+rosenbrock = BenchmarkFunction(rosenbrock, ((-2.0, 2.0), (-1.0, 3.0)), (np.array([1.0, 1.0]), 0.0))
 
 
 def beale(x):
@@ -70,8 +86,7 @@ def beale(x):
     return A + B + C
 
 
-beale.bounds = ((-4.5, 4.5), (-4.5, 4.5))
-beale.global_minimum = (np.array([3.0, 0.5]), 0.0)
+beale = BenchmarkFunction(beale, ((-4.5, 4.5), (-4.5, 4.5)), (np.array([3.0, 0.5]), 0.0))
 
 
 def griewank(x):
@@ -81,8 +96,7 @@ def griewank(x):
     return np.sum(x**2, axis=0) / 4000 - np.prod(np.cos(x / np.sqrt(indices)), axis=0) + 1
 
 
-griewank.bounds = ((-600.0, 600.0), (-600.0, 600.0))
-griewank.global_minimum = (np.zeros(2), 0.0)
+griewank = BenchmarkFunction(griewank, ((-600.0, 600.0), (-600.0, 600.0)), (np.zeros(2), 0.0))
 
 
 def himmelblau(x):
@@ -91,8 +105,7 @@ def himmelblau(x):
     return (x1**2 + x2 - 11) ** 2 + (x1 + x2**2 - 7) ** 2
 
 
-himmelblau.bounds = ((-5.0, 5.0), (-5.0, 5.0))
-himmelblau.global_minimum = (np.array([3.0, 2.0]), 0.0)
+himmelblau = BenchmarkFunction(himmelblau, ((-5.0, 5.0), (-5.0, 5.0)), (np.array([3.0, 2.0]), 0.0))
 
 
 def easom(x):
@@ -101,8 +114,7 @@ def easom(x):
     return -np.cos(x1) * np.cos(x2) * np.exp(-((x1 - np.pi) ** 2 + (x2 - np.pi) ** 2))
 
 
-easom.bounds = ((-100.0, 100.0), (-100.0, 100.0))
-easom.global_minimum = (np.array([np.pi, np.pi]), -1.0)
+easom = BenchmarkFunction(easom, ((-100.0, 100.0), (-100.0, 100.0)), (np.array([np.pi, np.pi]), -1.0))
 
 
 def eggholder(x):
@@ -113,8 +125,9 @@ def eggholder(x):
     return A + B
 
 
-eggholder.bounds = ((-512.0, 512.0), (-512.0, 512.0))
-eggholder.global_minimum = (np.array([512.0, 404.2319]), -959.6407)
+eggholder = BenchmarkFunction(
+    eggholder, ((-512.0, 512.0), (-512.0, 512.0)), (np.array([512.0, 404.2319]), -959.6407)
+)
 
 
 def booth(x):
@@ -123,8 +136,7 @@ def booth(x):
     return (x1 + 2 * x2 - 7) ** 2 + (2 * x1 + x2 - 5) ** 2
 
 
-booth.bounds = ((-10.0, 10.0), (-10.0, 10.0))
-booth.global_minimum = (np.array([1.0, 3.0]), 0.0)
+booth = BenchmarkFunction(booth, ((-10.0, 10.0), (-10.0, 10.0)), (np.array([1.0, 3.0]), 0.0))
 
 
 def matyas(x):
@@ -133,8 +145,7 @@ def matyas(x):
     return 0.26 * (x1**2 + x2**2) - 0.48 * x1 * x2
 
 
-matyas.bounds = ((-10.0, 10.0), (-10.0, 10.0))
-matyas.global_minimum = (np.zeros(2), 0.0)
+matyas = BenchmarkFunction(matyas, ((-10.0, 10.0), (-10.0, 10.0)), (np.zeros(2), 0.0))
 
 
 def levi13(x):
@@ -146,8 +157,7 @@ def levi13(x):
     return A + B + C
 
 
-levi13.bounds = ((-10.0, 10.0), (-10.0, 10.0))
-levi13.global_minimum = (np.array([1.0, 1.0]), 0.0)
+levi13 = BenchmarkFunction(levi13, ((-10.0, 10.0), (-10.0, 10.0)), (np.array([1.0, 1.0]), 0.0))
 
 
 ALL_FUNCTIONS = {
