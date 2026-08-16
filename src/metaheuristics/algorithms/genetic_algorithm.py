@@ -94,7 +94,7 @@ class GeneticAlgorithm:
         num_individuals, num_genes = individuals.shape
         offspring = np.empty_like(individuals)
 
-        for i in range(0, num_individuals, 2):
+        for i in range(0, num_individuals - 1, 2):
             if np.random.rand() < self.crossover_rate:
                 crossover_point = np.random.randint(1, num_genes)
                 offspring[i, :crossover_point] = individuals[i, :crossover_point]
@@ -104,6 +104,9 @@ class GeneticAlgorithm:
             else:
                 offspring[i, :] = individuals[i, :]
                 offspring[i + 1, :] = individuals[i + 1, :]
+
+        if num_individuals % 2:
+            offspring[-1, :] = individuals[-1, :]
 
         return offspring
 
