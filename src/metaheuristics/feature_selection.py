@@ -38,6 +38,12 @@ class MetaheuristicSelector(SelectorMixin, BaseEstimator):
         Number of cross-validation folds used to score each candidate subset.
     scoring : str or callable, optional
         Passed through to ``cross_val_score``; defaults to the estimator's score.
+        Any scikit-learn scorer works, including negative-oriented ones like
+        ``"neg_mean_squared_error"`` — sklearn scorers are always "higher is
+        better", and the objective minimizes ``-score``, so the sign convention
+        just carries through. The ``alpha`` penalty is on a fixed ``[0, 1]``-ish
+        scale, so for unbounded scorers you may need to rescale ``alpha`` to
+        keep the sparsity term from becoming negligible (or dominant).
     random_state : int, optional
         Seeds ``numpy.random`` before running the optimizer, for reproducibility.
     """
@@ -67,9 +73,9 @@ class MetaheuristicSelector(SelectorMixin, BaseEstimator):
         def objective_fn(weights: np.ndarray) -> float:
             mask = weights > 0.5
             if not mask.any():
-                return 1.0
+                return np.inf
             score = cross_val_score(estimator, X[:, mask], y, cv=self.cv, scoring=self.scoring).mean()
-            return (1 - score) + self.alpha * mask.sum() / num_features
+            return -score + self.alpha * mask.sum() / num_features
 
         if self.random_state is not None:
             np.random.seed(self.random_state)
