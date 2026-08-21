@@ -66,6 +66,7 @@ class ParticleSwarmOptimization:
         global_best_fitness = personal_best_fitness[global_best_index]
 
         fitness_history, position_history = [global_best_fitness], [global_best_position.copy()]
+        population_history = [positions.copy()]
 
         for iteration in range(self.max_iterations):
             inertia = self.inertia_start + (self.inertia_end - self.inertia_start) * (
@@ -94,10 +95,12 @@ class ParticleSwarmOptimization:
 
             fitness_history.append(global_best_fitness)
             position_history.append(global_best_position.copy())
+            population_history.append(positions.copy())
 
         return OptimizationResult(
             best_solution=global_best_position,
             best_fitness=global_best_fitness,
             fitness_history=fitness_history,
             position_history=position_history,
+            population_history=population_history,
         )

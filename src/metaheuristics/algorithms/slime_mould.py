@@ -78,6 +78,7 @@ class SlimeMouldAlgorithm:
         best_position = population[best_index].copy()
         best_fitness = fitness[best_index]
         fitness_history, position_history = [best_fitness], [best_position.copy()]
+        population_history = [population.copy()]
 
         for iteration in range(self.max_iterations):
             progress = (iteration + 1) / self.max_iterations
@@ -111,10 +112,12 @@ class SlimeMouldAlgorithm:
                 best_position = population[gen_best_index].copy()
             fitness_history.append(best_fitness)
             position_history.append(best_position.copy())
+            population_history.append(population.copy())
 
         return OptimizationResult(
             best_solution=best_position,
             best_fitness=best_fitness,
             fitness_history=fitness_history,
             position_history=position_history,
+            population_history=population_history,
         )

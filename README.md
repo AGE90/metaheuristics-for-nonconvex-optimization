@@ -5,15 +5,42 @@ applied to nonconvex, multimodal functions — built for learning how Genetic Al
 Swarm Optimization, Simulated Annealing, Differential Evolution, and the Slime Mould Algorithm
 behave, why they differ, and where each one shines or struggles.
 
+## See it in action
+
+Each GIF shows the benchmark-function surface, the population scattered across it per iteration
+(gray), and the best-so-far point (red) trailing a line along the path it took. `SimulatedAnnealing`
+has no population — just the single trajectory.
+
+| PSO on Ackley | GA on Rastrigin | SA on Rastrigin | DE on Rosenbrock | SMA on Himmelblau |
+|---|---|---|---|---|
+| ![PSO on Ackley](assets/pso_ackley.gif) | ![GA on Rastrigin](assets/ga_rastrigin.gif) | ![SA on Rastrigin](assets/sa_rastrigin.gif) | ![DE on Rosenbrock](assets/de_rosenbrock.gif) | ![SMA on Himmelblau](assets/sma_himmelblau.gif) |
+
+- **[PSO](docs/notes/particle-swarm-optimization.md)** converges quickly on Ackley's smooth,
+  moderately multimodal bowl — the whole swarm's momentum carries it to the basin.
+- **[GA](docs/notes/genetic-algorithm.md)** and **[SA](docs/notes/simulated-annealing.md)** run on
+  the *same* landscape, Rastrigin, deliberately — compare population search (GA) against a single
+  wandering point (SA) on a field of many local minima.
+- **[DE](docs/notes/differential-evolution.md)**'s difference-vector mutation follows Rosenbrock's
+  curved valley rather than just descending the nearest slope.
+- **[SMA](docs/notes/slime-mould-optimization.md)**'s random re-initialization keeps it from
+  collapsing onto just one of Himmelblau's four equally-good minima.
+
+Regenerate these with `uv run --group viz python scripts/generate_gifs.py` (needs the `viz`
+dependency group: `kaleido` + `imageio`).
+
 ## What's here
 
 - **`src/metaheuristics/`** — an installable package with from-scratch implementations of five
-  algorithms, twelve 2D benchmark/test functions, and interactive Plotly visualization helpers.
+  algorithms, twelve 2D benchmark/test functions, interactive Plotly visualization helpers, and
+  two scikit-learn-compatible estimators (`MetaheuristicSelector`, `MetaheuristicSearchCV`) for
+  feature selection and hyperparameter tuning.
 - **`notebooks/`** — one notebook per algorithm (surface + convergence + trajectory animation),
   a from-scratch-vs-library comparison notebook, and `notebooks/applications/` with signal
-  processing and data science examples.
+  processing and data science examples, including head-to-head comparisons against scikit-learn's
+  own feature selection and hyperparameter search tools.
 - **`docs/notes/`** — short study notes per algorithm (the update rule, key hyperparameters, when
-  it does well/poorly) and a benchmark-functions reference table.
+  it does well/poorly), a benchmark-functions reference table, and an applications note covering
+  the feature-selection/hyperparameter-tuning estimators.
 - **`reference/`** — citations for the foundational papers and a place to keep source PDFs.
 - **`tests/`** — a small pytest suite: benchmark functions evaluate correctly at their known
   optima, and each algorithm converges on the Sphere function within a loose smoke-test budget.
@@ -56,24 +83,62 @@ See `docs/notes/benchmark-functions.md` for the full table (formula, domain, glo
 all twelve functions, spanning bowl-shaped, valley-shaped, many-local-minima, multiple-global-
 minima, and steep/rugged landscapes.
 
+## Applications
+
+Both feature selection and hyperparameter tuning are naturally discrete/mixed search problems.
+Relaxed into a continuous box, either one can be driven by any of the five algorithms above and
+wrapped as a standard scikit-learn estimator:
+
+| Class | Module | Drop-in for |
+|---|---|---|
+| `MetaheuristicSelector` | `feature_selection.py` | `RFE`, `SelectKBest`, ... (`SelectorMixin`, works in a `Pipeline`) |
+| `MetaheuristicSearchCV` | `model_selection.py` | `GridSearchCV`, `RandomizedSearchCV` |
+
+```python
+from sklearn.svm import SVC
+from metaheuristics.model_selection import MetaheuristicSearchCV
+
+search = MetaheuristicSearchCV(
+    estimator=SVC(),
+    param_space={"C": (1e-2, 1e4, "log"), "gamma": (1e-6, 1e1, "log")},
+    cv=5,
+)
+search.fit(X, y)
+search.best_params_, search.best_score_
+```
+
+Both accept any `scoring` sklearn understands (accuracy, F1, ROC-AUC, `neg_mean_squared_error`,
+...) and any of the five optimizers. See `docs/notes/applications.md` for the full parameter
+tables and objective-function math, and `notebooks/applications/` for worked examples and
+comparisons against scikit-learn's own tools.
+
 ## Quickstart
 
 This project uses [uv](https://docs.astral.sh/uv/) for dependency and environment management.
 
 ```bash
-uv sync                 # install the package + all dependencies into .venv
-uv run pytest           # run the test suite
-uv run jupyter lab      # open the notebooks
+uv sync --all-extras --all-groups   # everything: algorithms, sklearn/plotly extras, notebooks, tests
+uv run pytest                       # run the test suite
+uv run jupyter lab                  # open the notebooks
 ```
 
 `uv sync` installs `metaheuristics` itself in editable mode, so notebooks and tests can
 `import metaheuristics...` directly — no `sys.path` hacks.
 
-## Math notation
+### Installing just the library
 
-Docs and notebooks use LaTeX (`$...$` inline, `$$...$$` display) for update rules and formulas,
-e.g. PSO's velocity update:
+Core `dependencies` are just `numpy` — the five algorithms and benchmark functions have no other
+runtime requirement. `metaheuristics.feature_selection`/`model_selection` need scikit-learn, and
+`metaheuristics.viz` needs plotly; both are `[project.optional-dependencies]` extras rather than
+hard dependencies, so a project consuming this as a package only pulls in what it actually uses:
 
-$$v_i \leftarrow w\, v_i + c_1 r_1 (p_i - x_i) + c_2 r_2 (g - x_i)$$
+```bash
+uv add metaheuristics                       # numpy only
+uv add "metaheuristics[sklearn]"            # + feature_selection / model_selection
+uv add "metaheuristics[plotly]"             # + viz
+uv add "metaheuristics[all]"                # everything above
+```
 
-renders in both Markdown files (GitHub/most viewers) and Jupyter markdown cells.
+(Notebook-only tools — Jupyter, matplotlib, mealpy, pandas, scipy — live in the `notebooks`
+dependency group instead, since they're needed to run this repo's notebooks, not to use the
+library. They're never installed by consumers.)

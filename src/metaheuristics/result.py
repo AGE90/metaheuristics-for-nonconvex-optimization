@@ -18,9 +18,14 @@ class OptimizationResult:
     position_history : list[np.ndarray]
         Best-so-far position at each iteration, for trajectory animations
         over a benchmark landscape.
+    population_history : list[np.ndarray]
+        Full population at each iteration, for population-scatter
+        animations. Empty for single-trajectory algorithms (e.g.
+        ``SimulatedAnnealing``).
     """
 
     best_solution: np.ndarray
     best_fitness: float
     fitness_history: list = field(default_factory=list)
     position_history: list = field(default_factory=list)
+    population_history: list = field(default_factory=list)

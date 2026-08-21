@@ -7,16 +7,15 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "ipywidgets>=8.1.8",
-    "jupyterlab>=4.6.2",
-    "matplotlib>=3.11.1",
-    "mealpy>=3.0.3",
     "numpy>=1.26.0",
-    "pandas>=2.3.3",
-    "plotly>=6.9.0",
-    "scikit-learn>=1.9.0",
-    "scipy>=1.16.3",
 ]
+
+[project.optional-dependencies]
+# metaheuristics.feature_selection / metaheuristics.model_selection
+sklearn = ["scikit-learn>=1.9.0"]
+# metaheuristics.viz
+plotly = ["plotly>=6.9.0"]
+all = ["metaheuristics[sklearn,plotly]"]
 
 [tool.ruff]
 target-version = "py312"
@@ -29,4 +28,16 @@ build-backend = "uv_build"
 dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.1",
+]
+notebooks = [
+    "ipywidgets>=8.1.8",
+    "jupyterlab>=4.6.2",
+    "matplotlib>=3.11.1",
+    "mealpy>=3.0.3",
+    "pandas>=2.3.3",
+    "scipy>=1.16.3",
+]
+viz = [
+    "imageio>=2.34",
+    "kaleido>=0.2.1",
 ]
