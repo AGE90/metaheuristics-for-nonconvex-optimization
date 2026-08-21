@@ -56,6 +56,7 @@ class DifferentialEvolution:
         best_index = np.argmin(fitness)
         fitness_history = [fitness[best_index]]
         position_history = [population[best_index].copy()]
+        population_history = [population.copy()]
 
         for _ in range(self.max_generations):
             for i in range(self.population_size):
@@ -76,6 +77,7 @@ class DifferentialEvolution:
             best_index = np.argmin(fitness)
             fitness_history.append(fitness[best_index])
             position_history.append(population[best_index].copy())
+            population_history.append(population.copy())
 
         best_index = np.argmin(fitness)
         return OptimizationResult(
@@ -83,4 +85,5 @@ class DifferentialEvolution:
             best_fitness=fitness[best_index],
             fitness_history=fitness_history,
             position_history=position_history,
+            population_history=population_history,
         )

@@ -140,6 +140,7 @@ class GeneticAlgorithm:
 
         best_position, best_fitness = best_of(population, fitness_values)
         fitness_history, position_history = [best_fitness], [best_position]
+        population_history = [self._decode(population)]
 
         for _ in range(self.max_generations):
             parents, _ = self.tournament_selection(population, fitness_values)
@@ -157,6 +158,7 @@ class GeneticAlgorithm:
             best_position, best_fitness = best_of(population, fitness_values)
             fitness_history.append(best_fitness)
             position_history.append(best_position)
+            population_history.append(self._decode(population))
 
         best_index = np.argmin(fitness_values)
         best_solution = self._decode(population[best_index : best_index + 1])[0]
@@ -165,4 +167,5 @@ class GeneticAlgorithm:
             best_fitness=fitness_values[best_index],
             fitness_history=fitness_history,
             position_history=position_history,
+            population_history=population_history,
         )
