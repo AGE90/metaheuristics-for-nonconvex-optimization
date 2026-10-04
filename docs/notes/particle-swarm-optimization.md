@@ -22,6 +22,11 @@ where $r_1, r_2 \sim U(0,1)$ (independent per dimension) inject stochasticity, $
 (`social_coeff`) how strongly it trusts the swarm. Positions are clipped back into `bounds` after
 each step.
 
+![PSO velocity update as a sum of inertia, cognitive and social vectors](../../assets/pso_velocity_update.png)
+
+After each move the attractors are refreshed: $p_i \leftarrow x_i$ if $f(x_i) < f(p_i)$, and
+$g \leftarrow \arg\min_i f(p_i)$.
+
 ## Inertia weight
 
 The inertia weight $w$ decays linearly from `inertia_start` to `inertia_end` over the run (Shi &
@@ -31,6 +36,14 @@ $$w(t) = w_{\text{start}} + (w_{\text{end}} - w_{\text{start}}) \cdot \frac{t}{T
 
 High inertia early on preserves momentum (exploration); low inertia late in the run damps
 oscillation so the swarm can settle (exploitation).
+
+A common alternative (not implemented here) is Clerc's **constriction factor**, which instead
+scales the whole update by a fixed $\chi$ derived from $\varphi = c_1 + c_2 > 4$:
+
+$$\chi = \frac{2}{\left|2 - \varphi - \sqrt{\varphi^2 - 4\varphi}\right|}, \qquad
+v_i \leftarrow \chi\left[v_i + c_1 r_1 (p_i - x_i) + c_2 r_2 (g - x_i)\right]$$
+
+With the classic $c_1 = c_2 = 2.05$ this gives $\chi \approx 0.729$.
 
 ## When it does well / poorly
 

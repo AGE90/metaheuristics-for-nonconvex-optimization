@@ -11,6 +11,13 @@ generation using operators loosely modeled on natural selection: **selection** (
 are more likely to reproduce), **crossover** (offspring combine material from two parents), and
 **mutation** (small random perturbations maintain diversity).
 
+![GA population, chromosome, gene and allele](../../assets/ga_chromosome.png)
+
+Terminology: a **chromosome** is a string of **genes** (here, bits); the value a gene takes is its
+**allele** (0 or 1). The allele configuration is the **genotype**; the decoded real vector it
+represents is the **phenotype**. Holland's original GA also had an **inversion** operator
+(reversing a contiguous section of a chromosome); it is not implemented here.
+
 ## Real-valued encoding
 
 Benchmark functions here take real vectors, so each variable $x_i \in [lb_i, ub_i]$ is encoded as

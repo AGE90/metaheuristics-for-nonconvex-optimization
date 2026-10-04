@@ -10,5 +10,6 @@ graphify-out/
 reference/papers/*
 !reference/papers/.gitkeep
 
-# files
+# Coding tools
 CLAUDE.md
+.claude/
